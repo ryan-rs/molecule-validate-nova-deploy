@@ -2,12 +2,10 @@
 dependency:
   name: galaxy
 driver:
-  name: docker
+  name: delegated
 lint:
   name: yamllint
 platforms:
-  - name: instance
-    image: centos:7
 provisioner:
   name: ansible
   lint:
