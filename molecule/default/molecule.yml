@@ -3,9 +3,15 @@ dependency:
   name: galaxy
 driver:
   name: delegated
+  options:
+    managed: False
+    login_cmd_template: 'ssh {instance}'
+    ansible_connection_options:
+      connection: ssh
 lint:
   name: yamllint
 platforms:
+  - name: aio1
 provisioner:
   name: ansible
   lint:
