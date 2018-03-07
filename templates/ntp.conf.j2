@@ -1,0 +1,31 @@
+# {{ ansible_managed }}
+#
+# Keep ntpd from panicking in the event of a large clock skew
+# when a VM guest is suspended and resumed.
+{% if ansible_virtualization_role == 'guest' %}
+tinker panic 0
+{% endif %}
+
+# Permit time synchronization with our time source, but do not
+# permit the source to query or modify the service on this system.
+restrict default kod nomodify notrap nopeer noquery
+restrict -6 default kod nomodify notrap nopeer noquery
+
+# Permit all access over the loopback interface.  This could
+# be tightened as well, but to do so would effect some of
+# the administrative functions.
+restrict 127.0.0.1
+restrict -6 ::1
+
+{% for server in ntp_servers %}
+server {{ server }} iburst
+{% endfor %}
+
+# Driftfile
+driftfile /var/lib/ntp/drift
+
+# Disable the monitoring facility to prevent amplification attacks using ntpdc
+# monlist command when default restrict does not include the noquery flag. See
+# CVE-2013-5211 for more details.
+# Note: Monitoring will not be disabled with the limited restriction flag.
+disable monitor
