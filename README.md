@@ -1,12 +1,35 @@
 Role Name
 =========
 
-A brief description of the role goes here.
+This is a simple test repo using the [molecule framework](https://molecule.readthedocs.io/en/latest/)
+for deploying system state via [ansible](https://www.ansible.com/)
+and validating that state using
+[infratest](https://testinfra.readthedocs.io/en/latest/).
 
 Requirements
 ------------
 
-Any pre-requisites that may not be covered by Ansible itself or the role should be mentioned here. For instance, if the role uses the EC2 module, it may be a good idea to mention in this section that the boto package is required.
+The following packages should be installed via pip in order to run molecule.
+In order to isolate the dependencies, it is recommended that you use a python
+virtualenv. However, such a virtualenv _must_ be located outside of the
+directory structure of this repo or the ansible linter will attempt to verify
+the dynamic yaml inside of core ansible and fail spectacularly because the
+entire virtualenv directory will be in scope for lint inspection.
+
+Here are the basic steps to get started with this repo:
+```
+cd /path/where/the/repo/will/be/cloned/to
+virtualenv --python python2 venv-molecule
+. venv-molecule/bin/activate
+pip install molecule testinfra ansible docker-py
+git clone git@github.com:phongdly/molecule-validate-nova-deploy
+cd molecule-validate-nova-deploy
+molecule test
+```
+
+This branch uses the `delegated` driver. You must ensure that your ssh
+configuration is setup to connect to the SUT, that you have an ssh-agent
+running, and that the key for the SUT has been added to the running agent.
 
 Role Variables
 --------------
@@ -27,10 +50,32 @@ Including an example of how to use your role (for instance, with variables passe
       roles:
          - { role: molecule-validate-nova-deploy, x: 42 }
 
+Generate Molecule Config from Ansible Dynamic Inventory
+-------------------------------------------------------
+
+The `moleculerize.py` script will build molecule config files from a RPC-O Ansible dynamic inventory file. As a
+prerequisite to using the `moleculerize.py` script a dynamic inventory must be generated from a RPC-O build:
+
+```
+sudo su -
+cd /opt/openstack-ansible/playbooks/inventory
+./dynamic_inventory.py > /path/to/dynaic_inventory.json
+```
+
+Now you can generate a `molecule.yml` config file using the `moleculerize.py` script:
+
+```
+cd /path/to/molecule-validate-nova-deploy
+./moleculerize.py /path/to/dynaic_inventory.json
+```
+
+The above command assumes that the `templates/molecule.yml.j2` template will be used along with `molecule.yml` as 
+the output file.
+
 License
 -------
 
-BSD
+Apache
 
 Author Information
 ------------------
