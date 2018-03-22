@@ -11,7 +11,6 @@ driver:
 lint:
   name: yamllint
 platforms:
-  - name: aio1
 provisioner:
   name: ansible
   lint:

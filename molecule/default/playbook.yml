@@ -1,5 +1,5 @@
 ---
 - name: Converge
-  hosts: compute-infra_hosts
+  hosts: non-existing-hosts
   roles:
     - role: molecule-validate-nova-deploy
