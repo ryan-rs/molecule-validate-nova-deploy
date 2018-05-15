@@ -1,2 +1,36 @@
 ---
 # tasks file for molecule-validate-nova-deploy
+
+- name: Clone openstack-ansible-ops repo
+  git:
+    repo=https://github.com/openstack/openstack-ansible-ops.git
+    dest=/opt/openstack-ansible-ops
+
+- name: Install python modules into /opt/ansible-runtime virtualenv
+  pip:
+    name: "{{ item }}"
+    state: present
+    virtualenv: /opt/ansible-runtime
+  with_items:
+    - ansible
+    - shade
+    - ipaddr
+    - netaddr
+
+- name: Find the proper inventory file
+  shell: find /opt/openstack-ansible -name dynamic_inventory.py -print
+  register: find_inventory_file
+  ignore_errors: True
+
+- name: Set proper inventory file
+  set_fact:
+    inventory_file: "{{ find_inventory_file.stdout }}"
+
+- name: Create networks
+  shell: |
+    . /opt/ansible-runtime/bin/activate
+    ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -i {{ inventory_file }} openstack-service-setup.yml
+    deactivate
+  args:
+    executable: /bin/bash
+    chdir: /opt/openstack-ansible-ops/multi-node-aio-xenial-ansible/playbooks/
