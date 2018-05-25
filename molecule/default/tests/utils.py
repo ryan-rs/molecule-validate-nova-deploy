@@ -100,3 +100,72 @@ def delete_it(service_type, service_name, run_on_host):
     cmd = ". /root/openrc ; openstack {} delete {}".format(service_type, id)
 
     run_on_host.run_expect([0], cmd)
+
+
+def reboot_server(run_on_host):
+    """ reboot the server as pressing on the reset button """
+
+    cmd = "echo 1 > /proc/sys/kernel/sysrq ; echo b > /proc/sysrq-trigger"
+    run_on_host.run(cmd)
+
+
+def verify_nova_compute_service_is_enabled(run_on_host, retries=10):
+    """Expected the nova-compute service status is enabled as below:
+    root@compute1:~# openstack compute service list --service nova-compute
+    +----+--------------+----------+------+---------+-------+----------------------------+
+    | ID | Binary       | Host     | Zone | Status  | State | Updated At                 |
+    +----+--------------+----------+------+---------+-------+----------------------------+
+    | 83 | nova-compute | compute1 | nova | enabled | up    | 2018-05-25T21:42:15.000000 |
+    | 86 | nova-compute | compute2 | nova | enabled | up    | 2018-05-25T21:42:11.000000 |
+    +----+--------------+----------+------+---------+-------+----------------------------+
+
+    root@compute1:~# openstack compute service list --service nova-compute -f json
+    [
+      {
+        "Status": "enabled",
+        "Binary": "nova-compute",
+        "Zone": "nova",
+        "State": "up",
+        "Host": "compute1",
+        "Updated At": "2018-05-25T22:01:06.000000",
+        "ID": 83
+      },
+      {
+        "Status": "enabled",
+        "Binary": "nova-compute",
+        "Zone": "nova",
+        "State": "up",
+        "Host": "compute2",
+        "Updated At": "2018-05-25T22:01:01.000000",
+        "ID": 86
+      }
+    ]
+    """
+    cmd = ". /root/openrc ; openstack compute service list --service nova-compute -f json"
+    output = run_on_host.run(cmd)
+    try:
+        result = json.loads(output.stdout)
+    except ValueError:
+        return
+
+    for i in range(0, retries):
+        while True:
+            for j in range(0, len(result) - 1):
+                while True:
+                    try:
+                        assert ('enabled' == result[j]['Status'])
+                    except Exception:
+                        sleep(5)
+                        continue
+                    break
+            break
+
+
+def verify_container_is_accessable(container, run_on_host):
+    """Verify the container can be attached from 'run_on_host'"""
+
+    # attach the utility container:
+    attach_container = "lxc-attach -n `lxc-ls -1 | grep {} | head -n 1` -- bash -c".format(container)
+    cmd = attach_container + 'hostname'
+    output = run_on_host(cmd)
+    assert container in output.stdout
