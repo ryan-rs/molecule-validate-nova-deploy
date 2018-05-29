@@ -49,3 +49,17 @@ def test_reboot_log_hosts(host):
 
     # Verify the logging hosts are backup and running
     utils.verify_container_is_accessable('rsyslog', host)
+
+
+@pytest.mark.test_id('c85e53b8-635c-11e8-a260-6c96cfdb2e43')
+@pytest.makr.jira('asc-231')
+@pytest.mark.order4
+def test_reboot_infra_hosts(host):
+    """Reboot all infra hosts in backward order"""
+
+    for i in range(3, 1, -1):
+        utils.reboot_server(host[:3])
+
+        # Verify the host is backup and running
+        container = "infra{}_utility_container".format(i)
+        utils.verify_container_is_accessable(container, host)
