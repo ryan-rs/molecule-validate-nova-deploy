@@ -3,3 +3,33 @@
   hosts: infra1
   roles:
     - role: molecule-validate-nova-deploy
+
+- name: Reboot all Nova hosts
+  hosts: nova_compute
+  tasks:
+    - shell: sleep 2 && shutdown -r now "Ansible reboot all Nova hosts"
+      async: 1
+      poll: 0
+      ignore_errors: true
+
+    - local_action: wait_for
+      args:
+        port: 22
+        state: started
+        delay: 30
+        timeout: 420
+
+- name: Reboot all log hosts
+  hosts: log_hosts
+  tasks:
+    - shell: sleep 2 && shutdown -r now "Ansible reboot all logging hosts"
+      async: 1
+      poll: 0
+      ignore_errors: true
+
+    - local_action: wait_for
+      args:
+        port: 22
+        state: started
+        delay: 120
+        timeout: 420
