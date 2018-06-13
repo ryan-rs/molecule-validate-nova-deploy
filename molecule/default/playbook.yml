@@ -31,5 +31,5 @@
       args:
         port: 22
         state: started
-        delay: 120
+        delay: 300
         timeout: 420
