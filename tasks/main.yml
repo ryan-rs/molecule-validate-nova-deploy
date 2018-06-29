@@ -21,7 +21,7 @@
     state: present
     virtualenv: /opt/molecule-test-env-on-sut
   with_items:
-    - ansible
+    - ansible==2.5.5
     - shade
     - ipaddr
     - netaddr
