@@ -22,9 +22,9 @@
     virtualenv: /opt/molecule-test-env-on-sut
   with_items:
     - ansible==2.5.5
-    - shade
-    - ipaddr
-    - netaddr
+    - shade==1.28.0
+    - ipaddr==2.2.0
+    - netaddr==0.7.19
 
 - name: Find the proper inventory file
   shell: find /opt/openstack-ansible -name dynamic_inventory.py -print
