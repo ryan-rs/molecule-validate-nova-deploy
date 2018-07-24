@@ -1,0 +1,12 @@
+---
+# tasks file for molecule-validate-nova-deploy
+
+- name: Clean old openstack-ansible-ops dir if previously existing
+  file:
+    state: absent
+    path: /opt/openstack-ansible-ops
+
+- name: Clone openstack-ansible-ops repo
+  git:
+    repo=https://github.com/openstack/openstack-ansible-ops.git
+    dest=/opt/openstack-ansible-ops

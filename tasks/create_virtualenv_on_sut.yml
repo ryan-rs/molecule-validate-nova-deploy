@@ -1,0 +1,17 @@
+---
+# tasks file for molecule-validate-nova-deploy
+
+- name: Create virtualenv for the submodule
+  shell: virtualenv /opt/molecule-test-env-on-sut
+
+- name: Install python modules into /opt/molecule-test-env-on-sut virtualenv
+  pip:
+    name: "{{ item }}"
+    extra_args: --isolated
+    state: present
+    virtualenv: /opt/molecule-test-env-on-sut
+  with_items:
+    - ansible==2.5.5
+    - shade==1.28.0
+    - ipaddr==2.2.0
+    - netaddr==0.7.19
