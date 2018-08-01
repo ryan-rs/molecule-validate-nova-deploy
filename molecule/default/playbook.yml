@@ -7,7 +7,46 @@
 - name: Reboot all Nova hosts
   hosts: nova_compute
   tasks:
-    - shell: sleep 5 && shutdown -r now "Ansible reboot all Nova hosts"
+    - import_tasks: get_server_uptime.yml
+
+    - shell: sleep 2 && shutdown -r now "Ansible reboot all Nova hosts"
+      async: 1
+      poll: 0
+      ignore_errors: true
+
+    - local_action: wait_for
+      args:
+        port: 22
+        state: started
+        delay: 240
+        timeout: 600
+    - import_tasks: get_server_uptime.yml
+
+- name: Reboot all log hosts
+  hosts: log_hosts
+  tasks:
+    - import_tasks: get_server_uptime.yml
+
+    - shell: sleep 2 && shutdown -r now "Ansible reboot all logging hosts"
+      async: 1
+      poll: 0
+      ignore_errors: true
+
+    - local_action: wait_for
+      args:
+        port: 22
+        state: started
+        delay: 240
+        timeout: 600
+
+    - import_tasks: get_server_uptime.yml
+
+- name: Reboot infra3 host
+  hosts: infra3
+  tasks:
+    - import_tasks: get_server_uptime.yml
+
+    - shell: sleep 2 && shutdown -r now "Ansible reboot infra3 host"
       async: 1
       poll: 0
       ignore_errors: true
@@ -19,15 +58,14 @@
         delay: 300
         timeout: 420
 
-    - service:
-      name: “nova-compute”
-      state: started
-      enabled: yes
+    - import_tasks: get_server_uptime.yml
 
-- name: Reboot all log hosts
-  hosts: log_hosts
+- name: Reboot infra2 host
+  hosts: infra2
   tasks:
-    - shell: sleep 5 && shutdown -r now "Ansible reboot all logging hosts"
+    - import_tasks: get_server_uptime.yml
+
+    - shell: sleep 2 && shutdown -r now "Ansible reboot infra2 host"
       async: 1
       poll: 0
       ignore_errors: true
@@ -36,5 +74,98 @@
       args:
         port: 22
         state: started
-        delay: 600
-        timeout: 900
+        delay: 300
+        timeout: 600
+
+    - import_tasks: get_server_uptime.yml
+
+- name: Reboot infra1 host
+  hosts: infra1
+  tasks:
+    - import_tasks: get_server_uptime.yml
+
+    - shell: sleep 2 && shutdown -r now "Ansible reboot infra1 host"
+      async: 1
+      poll: 0
+      ignore_errors: true
+
+    - local_action: wait_for
+      args:
+        port: 22
+        state: started
+        delay: 300
+        timeout: 600
+
+    - import_tasks: get_server_uptime.yml
+
+- name: Reboot all Cinder hosts
+  hosts: storage_hosts
+  tasks:
+    - import_tasks: get_server_uptime.yml
+
+    - shell: sleep 2 && shutdown -r now "Ansible reboot all Cinder hosts"
+      async: 1
+      poll: 0
+      ignore_errors: true
+
+    - local_action: wait_for
+      args:
+        port: 22
+        state: started
+        delay: 240
+        timeout: 600
+    - import_tasks: get_server_uptime.yml
+
+- name: Register utility container
+  hosts: infra1
+  tasks:
+    - shell: |
+        lxc-ls -1 | grep utility | head -n 1
+      register: utility_container
+
+- name: Check for servers after rebooting all
+  hosts: infra1
+  tasks:
+    - shell: |
+        lxc-attach -n "{{ utility_container.stdout }}"  \
+        -- bash -c '. /root/openrc ; \
+        openstack server list -c ID -f value'
+      register: server_instances
+      changed_when: false
+      failed_when: false
+
+- name: Delete all previously existing servers
+  hosts: infra1
+  tasks:
+    - shell: |
+        lxc-attach -n "{{ utility_container.stdout }}"  \
+        -- bash -c '. /root/openrc ; \
+        openstack server delete "{{ item }}"'
+      when:
+        - server_instances.rc == 0
+        - server_instances.stdout != ""
+      with_items: "{{ server_instances.stdout_lines }}"
+
+- name: Wait for asynchronous delete to occur.
+  hosts: infra1
+  tasks:
+    - pause:
+        minutes: 5
+      when:
+        - server_instances.stdout != ""
+
+- name: Check for servers before entering Nova molecule tests
+  hosts: infra1
+  tasks:
+    - shell: |
+        lxc-attach -n "{{ utility_container.stdout }}"  \
+        -- bash -c '. /root/openrc ; \
+        openstack server list'
+      register: server_instances_second_time
+      when:
+        - server_instances.stdout != ""
+
+    - debug:
+        var: server_instances_second_time.stdout_lines
+      when:
+        - server_instances.stdout != ""

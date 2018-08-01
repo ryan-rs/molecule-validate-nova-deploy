@@ -1,0 +1,10 @@
+---
+# tasks file for molecule-validate-nova-deploy
+
+- name: Check server uptime
+  command: uptime
+  register: check_vm_uptime
+
+- name: debug
+  debug:
+    var: check_vm_uptime.stdout_lines
