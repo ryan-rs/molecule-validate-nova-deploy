@@ -2,12 +2,12 @@
 # tasks file for molecule-validate-nova-deploy
 
 - import_tasks: cloning_openstack_ansible_ops.yml
-  when: openstack_service_setup_already_ran_successfully is not defined
+  when: ansible_local.service_setup is not defined
 
 - import_tasks: create_virtualenv_on_sut.yml
-  when: openstack_service_setup_already_ran_successfully is not defined
+  when: ansible_local.service_setup is not defined
 
 - import_tasks: run_openstack_service_setup_playbook.yml
-  when: openstack_service_setup_already_ran_successfully is not defined
+  when: ansible_local.service_setup is not defined
 
 - import_tasks: server_delete.yml
