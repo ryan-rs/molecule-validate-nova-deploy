@@ -21,13 +21,11 @@
     - rpc_openstack is undefined or
       rpc_openstack['rpc_product_release'] is undefined
 
-- import_tasks: cloning_openstack_ansible_ops.yml
-  when: ansible_local.service_setup is not defined
+- block:
+    - import_tasks: cloning_openstack_ansible_ops.yml
+    - import_tasks: create_virtualenv_on_sut.yml
+    - import_tasks: run_openstack_service_setup_playbook.yml
 
-- import_tasks: create_virtualenv_on_sut.yml
-  when: ansible_local.service_setup is not defined
-
-- import_tasks: run_openstack_service_setup_playbook.yml
   when: ansible_local.service_setup is not defined
 
 - import_tasks: server_delete.yml
