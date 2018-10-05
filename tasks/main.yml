@@ -21,6 +21,8 @@
     - rpc_openstack is undefined or
       rpc_openstack['rpc_product_release'] is undefined
 
+- import_tasks: ssh_key_containers.yml
+
 - block:
     - import_tasks: cloning_openstack_ansible_ops.yml
     - import_tasks: create_virtualenv_on_sut.yml
