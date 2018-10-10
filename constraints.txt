@@ -1,2 +1,4 @@
-molecule~=2.14
 ansible==2.4.3
+flake8-pytest-mark==1.0.0rc2
+magic-marker==1.0.0rc2
+molecule~=2.14
